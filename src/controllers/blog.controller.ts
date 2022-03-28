@@ -1,0 +1,96 @@
+import { NextFunction, Request, Response } from 'express';
+import {
+  createBlog,
+  getBlog,
+  updateBlog,
+  deleteBlog,
+  getAllBlogs,
+} from '../services/blog.services';
+import { Blog } from '../types/blog.type';
+
+const DEFAULT_PAGINATION_PAGE = 1;
+const DEFAULT_PAGINATION_SIZE = 10;
+
+// method to handle th blog creation
+export const createBlogHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | undefined> => {
+  try {
+    const userId = req.user?.id;
+    const blog: Blog = await createBlog({ ...req.body, author: userId });
+    return res.status(201).send(blog);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// method to handle blog fetching
+export const getBlogHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | undefined> => {
+  try {
+    const blog: Blog | null = await getBlog(req.params.id);
+
+    if (blog) {
+      return res.status(201).send(blog);
+    }
+    return res.status(404).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+// method to handle update
+export const updateBlogHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | undefined> => {
+  try {
+    const userId = req.user?.id;
+    const blog: Blog = await updateBlog(req.params.id, req.body, userId);
+    return res.status(200).send(blog);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// method to handle blog deletion
+export const deleteBlogHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | undefined> => {
+  try {
+    const userId = req.user?.id;
+    await deleteBlog(req.params.id, userId);
+    return res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+// method to fetch all the blogs
+export const getAllBlogsHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | undefined> => {
+  try {
+    const page =
+      (req.query.page && parseInt(req.query.page.toString())) ||
+      DEFAULT_PAGINATION_PAGE;
+    const size =
+      (req.query.size && parseInt(req.query.size.toString())) ||
+      DEFAULT_PAGINATION_SIZE;
+
+    const blogs: Array<Blog> = await getAllBlogs({ page, size });
+    return res.status(200).send(blogs);
+  } catch (error) {
+    next(error);
+  }
+};
